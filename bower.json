@@ -1,7 +1,7 @@
 {
   "name": "gantt-chart",
   "authors": [
-    "Aleksey Maslakov <lesha.maslakov@gmail.com>"
+    "Aleksey Maslakov"
   ],
   "description": "A simple Gantt Chart",
   "main": "index.html",
@@ -20,5 +20,8 @@
   ],
   "dependencies": {
     "d3": "~3.5.16"
+  },
+  "devDependencies": {
+    "jquery": "^2.2.1"
   }
 }

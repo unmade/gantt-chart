@@ -2,20 +2,23 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     less = require('gulp-less'),
     minifyCss = require('gulp-minify-css'),
+    sourcemaps = require('gulp-sourcemaps'),
     uglify = require('gulp-uglify'),
     path = require('path');
 
 
 var paths = {
-    'scripts': ['/src/gantt-chart.js'],
-    'styles': ['/src/gantt-chart.less']
+    'scripts': ['src/gantt-chart.js'],
+    'styles': ['src/gantt-chart.less']
 };
 
 
 gulp.task('app-scripts', function() {
     return gulp.src(paths.scripts)
-    .pipe(concat('gantt-chart.min.js'))
-    .pipe(gulp.dest('dist/'));
+    .pipe(sourcemaps.init())
+        .pipe(concat('gantt-chart.min.js'))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest('dist'));
 });
 
 
@@ -33,8 +36,8 @@ gulp.task('watch', function() {
 });
 
 
-gulp.task('default', function() {
+gulp.task('default', [
     'watch',
     'app-scripts',
     'app-styles'
-});
+]);
