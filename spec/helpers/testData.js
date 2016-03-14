@@ -1,17 +1,19 @@
 'use strict';
 
 function testData() {
+    var startDate = Date.parse('2012-01-01T00:30:00'),
+        id = 0,
+        classes = ['success', 'danger', 'warning', 'info', 'default'];
+
     return {
         getItem: getItem,
-        getItems: getItems
+        getItems: getItems,
+        getRandomItems: getRandomItems
     }
 
     function getItem() {
-        var startDate = Date.parse('2012-01-01T00:30:00'),
-            i;
-
         return {
-            id: 100,
+            id: id++,
             lane: 2,
             start: startDate + 180000,
             end: startDate + 524000,
@@ -21,19 +23,18 @@ function testData() {
         }
     }
 
-    function getItems() {
+    function getItems(n) {
         var items = [],
-            startDate = Date.parse('2012-01-01T00:30:00'),
             i,
-            N = 1;
+            N = n || 1;
 
         for (i = 0; i < N; i++) {
             items.push({
-                id: i,
+                id: id++,
                 lane: 0,
                 start: startDate + 180000,
                 end: startDate + 444000,
-                tooltip: "первый",
+                tooltip: getTooltip,
                 class: 'danger',
                 sublane: 0
             });
@@ -44,11 +45,11 @@ function testData() {
 
         for (i = N; i < 2*N; i++) {
             items.push({
-                id: i,
+                id: id++,
                 lane: 2,
                 start: startDate + 180000,
                 end: startDate + 524000,
-                tooltip: "второй",
+                tooltip: getTooltip,
                 class: 'success',
                 sublane: 0
             });
@@ -59,11 +60,11 @@ function testData() {
 
         for (i = 2*N; i < 3*N; i++) {
             items.push({
-                id: i,
+                id: id++,
                 lane: 0,
                 start: startDate,
                 end: startDate + 389000,
-                tooltip: "третий",
+                tooltip: getTooltip,
                 class: 'success',
                 sublane: 1
             });
@@ -71,5 +72,40 @@ function testData() {
         }
 
         return items;
+    }
+
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function getRandomItems(n) {
+        var items = [],
+            i,
+            N = n || 1;
+
+        for (i = 0; i < N; i++) {
+            items.push({
+                id: id++,
+                lane: getRandomInt(0, 5),
+                start: startDate + 180000,
+                end: startDate + 444000,
+                tooltip: getTooltip,
+                class: classes[getRandomInt(0, classes.length)],
+                sublane: 0
+            });
+            startDate += 1800000;
+        }
+
+        return items;
+    }
+
+    function getTooltip() {
+        return '<h4>Item #' + this.id + '</h4>' +
+               '<table class="gantt-tooltip-table">' +
+               '  <tr><td class="text-right">Start:</td><td>' + this.start + '</td></tr>' +
+               '  <tr><td class="text-right">End:</td><td>' + this.end + '</td></tr>' +
+               '  <tr><td class="text-right">Class:</td><td>' + this.class + '</td></tr>' +
+               '</table>'
+
     }
 }

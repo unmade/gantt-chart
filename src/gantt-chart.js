@@ -2,7 +2,10 @@
 
 var ganttChart = function(conf) {
     var self = {},
-        chart, main, itemRects, xAxis, xScale, yAxis, yScale, zoom;
+        toStr = Object.prototype.toString,
+        astr = "[object Array]",
+        ostr = "[object Object]",
+        chart, main, itemRects, tooltipDiv, xAxis, xScale, yAxis, yScale, zoom;
 
     self.items = null;
     self.lanes = null;
@@ -14,7 +17,7 @@ var ganttChart = function(conf) {
     self.isShowXGrid = true;
     self.isShowYGrid = true;
     self.isShowLaneLabel = true;
-    self.isTooltip = true;
+    self.isShowTooltip = true;
 
     self.height = $(self.renderTo).height() || 480;
     self.width = $(self.renderTo).width() || 640;
@@ -34,22 +37,25 @@ var ganttChart = function(conf) {
 
         build();
         enableZoom(self.isEnableZoom);
-        setAutoResize(self.isAutoResize);
-        setTooltip(self.isTooltip);
+        autoresize(self.isAutoResize);
+        showTooltip(self.isShowTooltip);
         showLaneLabel(self.isShowLaneLabel);
         showXGrid(self.isShowXGrid);
         showYGrid(self.isShowYGrid);
         redraw();
     })();
 
-    function addItem(item) {
-        self.items.push(item);
+    function addItems(newItems) {
+        var itemsType = toStr.call(newItems);
+        if (itemsType !== astr && itemsType !== ostr) throwError('Expected object or array. Got: ' + itemsType);
+        (itemsType === astr) ? self.items = self.items.concat(newItems) : self.items.push(newItems);
         onItemsChange();
     }
 
-    function addItems(newItems) {
-        self.items = self.items.concat(newItems);
-        onItemsChange();
+    function autoresize(isAutoResize) {
+        if (!arguments.length) return self.isAutoResize;
+        d3.select(window).on('resize', (isAutoResize !== false) ? resize : null);
+        self.isAutoResize = isAutoResize;
     }
 
     function build() {
@@ -78,6 +84,10 @@ var ganttChart = function(conf) {
         itemRects = main.append("g")
             .attr("clip-path", "url(#clip)");
 
+        tooltipDiv = d3.select("body").append("div")
+            .attr("class", "gantt-tooltip")
+            .style("opacity", 0);
+
         xScale = d3.time.scale()
             .domain(getTimeDomain())
             .range([0, marginWidth]);
@@ -95,7 +105,6 @@ var ganttChart = function(conf) {
             .scale(yScale)
             .orient('left')
             .ticks(laneLength)
-            .tickSize(-6, 0, 0)
             .tickFormat("");
 
         zoom = d3.behavior.zoom()
@@ -112,12 +121,21 @@ var ganttChart = function(conf) {
 
         main.append('g')
             .attr('class', 'laneLabels');
+
+        chart.call(zoom);
+
+        chart.on("click", function(d) {
+            if (!self.isShowTooltip) return;
+            if (!$(event.target).closest('svg rect').length) {
+                tooltipDiv.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            }
+        });
     }
 
     function copySameProp(copyTo, copyFrom) {
-        var p,
-            toStr = Object.prototype.toString,
-            ostr = ['object Object'];
+        var p;
 
         for (p in copyFrom) {
             if (copyTo.hasOwnProperty(p)) {
@@ -132,15 +150,10 @@ var ganttChart = function(conf) {
     }
 
     function enableZoom(isEnableZoom) {
-        if (isEnableZoom !== false) {
-            zoom.on("zoom", redraw);
-            chart.call(zoom);
-        }
-        else {
-            zoom.on("zoom", null);
-        }
+        if (!arguments.length) return self.isEnableZoom;
+        zoom.on("zoom", (isEnableZoom) ? redraw : null);
         self.isEnableZoom = isEnableZoom;
-    };
+    }
 
     function getLaneLength() {
         return (d3.max(self.items, function(d) { return d.lane }) + 1) || 0;
@@ -161,21 +174,50 @@ var ganttChart = function(conf) {
         ];
     }
 
+    function items(newItems) {
+        var itemsType = toStr.call(newItems);
+
+        if (!arguments.length) return self.items;
+        if (itemsType !== astr) throwError('Expected array. Got: ' + itemsType);
+        self.items = newItems;
+
+        onItemsChange();
+    }
+
+    function lanes(newLanes) {
+        var lanesType = toStr.call(newLanes);
+        if (!arguments.length) return self.lanes;
+        if (lanesType !== astr) throwError('Expected array. Got: ' + lanesType);
+        self.lanes = newLanes;
+        self.lanes.length = getLaneLength() || self.lanes.length;
+        showLaneLabel(!self.isShowLaneLabel);
+        showLaneLabel(!self.isShowLaneLabel);
+    }
+
+    function margin(newMargin) {
+        var msg = "Some of the margin value is incorrect. All numbers should be type of number";
+        if (!arguments.length) return self.margin;
+        self.margin.top = (typeof newMargin.top === 'number') ? newMargin.top : throwError(msg);
+        self.margin.right = (typeof newMargin.right === 'number') ? newMargin.right : throwError(msg);
+        self.margin.bottom = (typeof newMargin.bottom === 'number') ? newMargin.bottom : throwError(msg);
+        self.margin.left = (typeof newMargin.left === 'number') ? newMargin.left : throwError(msg);
+
+        resize();
+    }
+
     function onItemsChange() {
-        self.lanes.length = getLaneLength();
+        var laneLength = getLaneLength();
+        self.lanes.length = laneLength;
         xScale.domain(getTimeDomain());
-        yScale.domain([0, self.lanes.length]);
+        yAxis.ticks(laneLength);
+        yScale.domain([0, laneLength]);
         zoom.x(xScale);
         redraw();
-        setTooltip(self.isTooltip);
     }
 
     function redraw() {
         var itemHeight = getMarginHeight() / (self.lanes.length || 1) / (self.sublanes || 1),
             rects;
-
-        main.select('g.main.axis.date').call(xAxis);
-        main.select('g.main.axis.lane').call(yAxis);
 
         rects = itemRects.selectAll("rect")
             .data(self.items, function (d) { return d.id; })
@@ -184,7 +226,8 @@ var ganttChart = function(conf) {
                 return (self.sublanes < 2) ? yScale(d.lane) : yScale(d.lane) + d.sublane*itemHeight;
             })
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
-            .attr("height", function (d) { return itemHeight; });
+            .attr("height", function (d) { return itemHeight; })
+            .on("click", (self.isShowTooltip) ? tooltip : null);
         rects.enter().append("rect")
             .attr("class", function (d) { return d.class + ' main'; })
             .attr("x", function (d) { return xScale(d.start); })
@@ -193,8 +236,12 @@ var ganttChart = function(conf) {
             })
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
             .attr("height", function (d) { return  itemHeight; })
-            .attr("opacity", .75);
+            .attr("opacity", .75)
+            .on("click", (self.isShowTooltip) ? tooltip : null);
         rects.exit().remove();
+
+        main.select('g.main.axis.date').call(xAxis);
+        main.select('g.main.axis.lane').call(yAxis);
     }
 
     function resize() {
@@ -230,69 +277,8 @@ var ganttChart = function(conf) {
         redraw();
     }
 
-    function setAutoResize(isAutoResize) {
-        d3.select(window).on('resize', (isAutoResize !== false) ? resize : null);
-        self.isAutoResize = isAutoResize;
-    }
-
-    function setItems(items) {
-        self.items = items;
-        onItemsChange();
-    }
-
-    function setLanes(lanes) {
-        self.lanes = lanes;
-        self.lanes.length = getLaneLength() || self.lanes.length;
-        showLaneLabel(!self.isShowLaneLabel);
-        showLaneLabel(!self.isShowLaneLabel);
-    }
-
-    function setMargin(margin, isRedraw) {
-        self.margin = margin;
-        if (isRedraw === false) return;
-        resize();
-    }
-
-    function setSize(width, height, isRedraw) {
-        self.width = width || self.width;
-        self.height = height || self.height;
-        setAutoResize(false);
-        if (isRedraw === false) return;
-        resize();
-    }
-
-    function setSublanes(sublanes, isRedraw) {
-        self.sublanes = sublanes;
-        if (isRedraw === false) return;
-        redraw();
-    }
-
-    function setTooltip(isTooltip) {
-        self.isTooltip = isTooltip;
-        if (isTooltip === false) return;
-
-        $('svg.chart rect').on('click', function () {
-            $('.gantt-tooltip').remove();
-            if (this.classList[1] === 'main') {
-                var d = this.__data__,
-                    eOffset = $(this).offset(),
-                    tooltip = '<div class="gantt-tooltip">' + d.tooltip + '</div>';
-                $('body').append(tooltip);
-                $('.gantt-tooltip').css({
-                    'top': eOffset.top + this.height.baseVal.value + 5 + 'px',
-                    'left': eOffset.left + 'px'
-                });
-            }
-        });
-
-        $(document).on('click', function (e) {
-            if (!$(event.target).closest('svg rect').length) {
-                $('.gantt-tooltip').remove();
-            }
-        });
-    }
-
     function showLaneLabel(isShowLaneLabel) {
+        if (!arguments.length) return self.isShowLaneLabel;
         self.isShowLaneLabel = isShowLaneLabel;
         if (isShowLaneLabel === false) {
             main.selectAll(".laneText").remove();
@@ -310,55 +296,77 @@ var ganttChart = function(conf) {
             .attr("class", "laneText");
     }
 
-    function showXGrid(isShowXGrid, isRedraw) {
+    function showTooltip(isShowTooltip) {
+        if (!arguments.length) return self.isShowTooltip;
+        self.isShowTooltip = isShowTooltip;
+        redraw();
+    }
+
+    function tooltip(d) {
+        tooltipDiv.transition()
+            .duration(200)
+            .style("opacity", .9);
+        tooltipDiv.html((typeof d.tooltip === 'function') ? d.tooltip() : d.tooltip)
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY) + "px");
+    }
+
+    function throwError(msg) {
+        throw TypeError(msg);
+    }
+
+    function showXGrid(isShowXGrid) {
+        if (!arguments.length) return self.isShowXGrid;
         var height = (isShowXGrid !== false) ? -getMarginHeight() : -6;
         xAxis.tickSize(height, 0, 0);
         self.isShowXGrid = isShowXGrid;
-        if (isRedraw === false) return;
-        redraw();
+        main.select('g.main.axis.date').call(xAxis);
     }
 
-    function showYGrid(isShowYGrid, isRedraw) {
+    function showYGrid(isShowYGrid) {
+        if (!arguments.length) return self.isShowYGrid;
         var width = (isShowYGrid !== false) ? -getMarginWidth() : -6;
         yAxis.tickSize(width, 0, 0);
         self.isShowYGrid = isShowYGrid;
-        if (isRedraw === false) return;
+        main.select('g.main.axis.lane').call(yAxis);
+    }
+
+    function size(width, height) {
+        if (!arguments.length) return [self.width, self.height];
+        self.width = parseInt(width) || self.width;
+        self.height = parseInt(height) || self.height;
+        autoresize(false);
+        resize();
+    }
+
+    function sublanes(newSublanes) {
+        if (!arguments.length) return self.sublanes;
+        self.sublanes = newSublanes;
         redraw();
     }
 
-
     return {
-        addItem: addItem,
         addItems: addItems,
+        autoresize: autoresize,
         enableZoom: enableZoom,
-        getChart: function() { return main },
-        getItems: function() { return self.items },
-        getLanes: function() { return self.lanes },
-        getMargin: function() { return self.margin },
-        getSize: function() { return [self.width, self.height] },
-        getSublanes: function() { return self.sublanes },
-        getSvg: function() { return chart },
-        getXAxis: function() { return xAxis },
-        getXScale: function() { return xScale },
-        getYAxis: function() { return yAxis },
-        getYScale: function() { return yScale },
-        isAutoResize: function() { return self.isAutoResize },
-        isEnableZoom: function() { return self.isEnableZoom },
-        isShowXGrid: function() { return self.isShowXGrid },
-        isShowYGrid: function() { return self.isShowYGrid },
-        isShowLaneLabel: function() { return self.isShowLaneLabel },
-        isTooltip: function() { return self.isTooltip },
-        renderTo: function() { return self.renderTo },
-        redraw: redraw,
-        setAutoResize: setAutoResize,
-        setItems: setItems,
-        setLanes: setLanes,
-        setMargin: setMargin,
-        setSize: setSize,
-        setSublanes: setSublanes,
-        setTooltip: setTooltip,
+        chart: function() { return main },
+        items: items,
+        lanes: lanes,
+        margin: margin,
         showLaneLabel: showLaneLabel,
+        showTooltip: showTooltip,
         showXGrid: showXGrid,
-        showYGrid: showYGrid
+        showYGrid: showYGrid,
+        size: size,
+        sublanes: sublanes,
+        svg: function() { return chart },
+        redraw: redraw,
+        renderTo: function() { return self.renderTo },
+        resize: resize,
+        xAxis: function() { return xAxis },
+        xScale: function() { return xScale },
+        yScale: function() { return yScale },
+        yAxis: function() { return yAxis },
+        zoom: function() { return zoom },
     }
 }
