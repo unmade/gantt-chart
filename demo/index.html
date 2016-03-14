@@ -39,17 +39,16 @@
         <button id="autoresize" onclick="javascript:setAutoresize()">Toggle autoresize</button> |
         <button id="zoom" onclick="javascript:toggleZoom()">Toggle zoom</button> |
         <button id="showLaneLabel" onclick="javascript:toggleLaneLabels()">Show/hide lane labels</button> |
-        <button id="showTooltip" onclick="javascript:toggleTooltip()">Enable/disable tooltip</button> |
+        <button id="enableTooltip" onclick="javascript:toggleTooltip()">Enable/disable tooltip</button> |
         <button id="showXGrid" onclick="javascript:toggleXGrid()">Show/hide the X grid</button> |
         <button id="showYGrid" onclick="javascript:toggleYGrid()">Show/hide the Y grid</button> |
-        <button onclick="javascript:gantt.size(320, 240)">Change size</button>
+        <button id="setSize" onclick="javascript:setSize()">Set size</button>
         <hr />
     </div>
 
     <div id="gantt_chart"></div>
 
     <script src="../bower_components/d3/d3.min.js" type="application/javascript"></script>
-    <script src="../bower_components/jquery/dist/jquery.min.js" type="application/javascript"></script>
     <script src="../dist/gantt-chart.min.js" type="application/javascript"></script>
     <script src="/spec/helpers/testData.js" type="application/javascript"></script>
     <script src="/demo/demo.js" type="application/javascript"></script>

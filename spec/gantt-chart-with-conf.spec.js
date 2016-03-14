@@ -10,11 +10,11 @@ describe('test the Gantt Chart', function() {
         conf = {
             items: testData().getItems(),
             isAutoResize: false,
+            isEnableTooltip: false,
             isEnableZoom: false,
             isShowXGrid: false,
             isShowYGrid: false,
             isShowLaneLabel: false,
-            isShowTooltip: false,
             height: 240,
             lanes: [1, 2, 3],
             margin: margin,
@@ -30,15 +30,16 @@ describe('test the Gantt Chart', function() {
     });
 
     it('should check defaults values', function() {
-        var margin = {top: 20, right: 15, bottom: 20, left: 20};
+        var translate = 'translate(' + conf.margin.left + ',' + conf.margin.top + ')';
         expect(gantt.autoresize()).toBe(conf.isAutoResize);
+        expect(gantt.enableTooltip()).toBe(conf.isEnableTooltip);
         expect(gantt.enableZoom()).toBe(conf.isEnableZoom);
         expect(gantt.chart()).not.toBe(undefined);
         expect(gantt.items().length).toBe(conf.items.length);
         expect(gantt.lanes().length).toBe(conf.items.length);
         expect(gantt.margin()).toEqual(conf.margin);
+        expect(d3.select('svg g.main').attr('transform')).toEqual(translate);
         expect(gantt.showLaneLabel()).toBe(conf.isShowLaneLabel);
-        expect(gantt.showTooltip()).toBe(conf.isShowTooltip);
         expect(gantt.showXGrid()).toBe(conf.isShowXGrid);
         expect(gantt.showYGrid()).toBe(conf.isShowYGrid);
         expect(gantt.size()).toEqual([conf.width, conf.height]);

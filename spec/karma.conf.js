@@ -5,7 +5,6 @@ module.exports = function(config) {
 
     files : [
       'bower_components/d3/d3.min.js',
-      'bower_components/jquery/dist/jquery.min.js',
       'dist/gantt-chart.min.js',
       'spec/helpers/*.js',
       'spec/*.spec.js',

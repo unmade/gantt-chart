@@ -2,9 +2,9 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     less = require('gulp-less'),
     minifyCss = require('gulp-minify-css'),
+    rename = require('gulp-rename'),
     sourcemaps = require('gulp-sourcemaps'),
-    uglify = require('gulp-uglify'),
-    path = require('path');
+    uglify = require('gulp-uglify');
 
 
 var paths = {
@@ -16,6 +16,7 @@ var paths = {
 gulp.task('app-scripts', function() {
     return gulp.src(paths.scripts)
     .pipe(sourcemaps.init())
+        .pipe(uglify())
         .pipe(concat('gantt-chart.min.js'))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('dist'));
@@ -24,8 +25,9 @@ gulp.task('app-scripts', function() {
 
 gulp.task('app-styles', function () {
   return gulp.src(paths.styles)
-    .pipe(concat('gantt-chart.min.css'))
+    .pipe(less())
     .pipe(minifyCss())
+    .pipe(rename({extname: '.min.css'}))
     .pipe(gulp.dest('dist/'));
 });
 

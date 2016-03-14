@@ -1,11 +1,37 @@
 'use strict';
 
 var ganttChart = function(conf) {
-    var self = {},
+    var api,
+        self = {},
         toStr = Object.prototype.toString,
         astr = "[object Array]",
         ostr = "[object Object]",
         chart, main, itemRects, tooltipDiv, xAxis, xScale, yAxis, yScale, zoom;
+
+    api = {
+        addItems: addItems,
+        autoresize: autoresize,
+        enableTooltip: enableTooltip,
+        enableZoom: enableZoom,
+        chart: function() { return main },
+        items: items,
+        lanes: lanes,
+        margin: margin,
+        showLaneLabel: showLaneLabel,
+        showXGrid: showXGrid,
+        showYGrid: showYGrid,
+        size: size,
+        sublanes: sublanes,
+        svg: function() { return chart },
+        redraw: redraw,
+        renderTo: function() { return self.renderTo },
+        resize: resize,
+        xAxis: function() { return xAxis },
+        xScale: function() { return xScale },
+        yScale: function() { return yScale },
+        yAxis: function() { return yAxis },
+        zoom: function() { return zoom },
+    };
 
     self.items = null;
     self.lanes = null;
@@ -13,14 +39,14 @@ var ganttChart = function(conf) {
     self.sublanes = 1;
 
     self.isAutoResize = true;
+    self.isEnableTooltip = true;
     self.isEnableZoom = true;
     self.isShowXGrid = true;
     self.isShowYGrid = true;
     self.isShowLaneLabel = true;
-    self.isShowTooltip = true;
 
-    self.height = $(self.renderTo).height() || 480;
-    self.width = $(self.renderTo).width() || 640;
+    self.height = null;
+    self.width = null;
     self.margin = {
         top: 20,
         right: 15,
@@ -35,11 +61,14 @@ var ganttChart = function(conf) {
         self.lanes = self.lanes || [];
         self.lanes.length = getLaneLength();
 
+        if (self.height === null) self.height = parseInt(d3.select(self.renderTo).style('height')) || 480;
+        if (self.width === null) self.width = parseInt(d3.select(self.renderTo).style('width')) || 640;
+
         build();
         enableZoom(self.isEnableZoom);
         autoresize(self.isAutoResize);
-        showTooltip(self.isShowTooltip);
-        showLaneLabel(self.isShowLaneLabel);
+        enableTooltip(self.isEnableTooltip);
+        showLaneLabel(self.isEnableTooltip);
         showXGrid(self.isShowXGrid);
         showYGrid(self.isShowYGrid);
         redraw();
@@ -50,12 +79,14 @@ var ganttChart = function(conf) {
         if (itemsType !== astr && itemsType !== ostr) throwError('Expected object or array. Got: ' + itemsType);
         (itemsType === astr) ? self.items = self.items.concat(newItems) : self.items.push(newItems);
         onItemsChange();
+        return api;
     }
 
     function autoresize(isAutoResize) {
         if (!arguments.length) return self.isAutoResize;
         d3.select(window).on('resize', (isAutoResize !== false) ? resize : null);
         self.isAutoResize = isAutoResize;
+        return api;
     }
 
     function build() {
@@ -67,7 +98,7 @@ var ganttChart = function(conf) {
             .append("svg")
             .attr("width", self.width)
             .attr("height", self.height)
-            .attr("class", "chart");
+            .attr("class", "gantt-chart");
 
         chart.append("defs").append("clipPath")
             .attr("id", "clip")
@@ -76,7 +107,7 @@ var ganttChart = function(conf) {
             .attr("height", marginHeight);
 
         main = chart.append("g")
-            .attr("transform", "translate(" + self.margin.bottom + "," + self.margin.top + ")")
+            .attr("transform", "translate(" + self.margin.left + "," + self.margin.top + ")")
             .attr("width", marginWidth)
             .attr("height", marginHeight)
             .attr("class", "main");
@@ -124,12 +155,10 @@ var ganttChart = function(conf) {
 
         chart.call(zoom);
 
-        chart.on("click", function(d) {
-            if (!self.isShowTooltip) return;
-            if (!$(event.target).closest('svg rect').length) {
-                tooltipDiv.transition()
-                    .duration(500)
-                    .style("opacity", 0);
+        d3.select('html').on("click", function(d) {
+            if (!self.isEnableTooltip) return;
+            if (!event.target.closest('svg rect')) {
+                hideTooltip();
             }
         });
     }
@@ -149,10 +178,18 @@ var ganttChart = function(conf) {
         }
     }
 
+    function enableTooltip(isEnableTooltip) {
+        if (!arguments.length) return self.isEnableTooltip;
+        self.isEnableTooltip = isEnableTooltip;
+        redraw();
+        return api;
+    }
+
     function enableZoom(isEnableZoom) {
         if (!arguments.length) return self.isEnableZoom;
         zoom.on("zoom", (isEnableZoom) ? redraw : null);
         self.isEnableZoom = isEnableZoom;
+        return api;
     }
 
     function getLaneLength() {
@@ -174,6 +211,13 @@ var ganttChart = function(conf) {
         ];
     }
 
+    function hideTooltip() {
+        tooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0)
+            .style("display", "none");
+    }
+
     function items(newItems) {
         var itemsType = toStr.call(newItems);
 
@@ -182,6 +226,7 @@ var ganttChart = function(conf) {
         self.items = newItems;
 
         onItemsChange();
+        return api;
     }
 
     function lanes(newLanes) {
@@ -192,17 +237,33 @@ var ganttChart = function(conf) {
         self.lanes.length = getLaneLength() || self.lanes.length;
         showLaneLabel(!self.isShowLaneLabel);
         showLaneLabel(!self.isShowLaneLabel);
+        return api;
     }
 
     function margin(newMargin) {
-        var msg = "Some of the margin value is incorrect. All numbers should be type of number";
+        var msg = " margin value is incorrect. All values should be numbers";
         if (!arguments.length) return self.margin;
-        self.margin.top = (typeof newMargin.top === 'number') ? newMargin.top : throwError(msg);
-        self.margin.right = (typeof newMargin.right === 'number') ? newMargin.right : throwError(msg);
-        self.margin.bottom = (typeof newMargin.bottom === 'number') ? newMargin.bottom : throwError(msg);
-        self.margin.left = (typeof newMargin.left === 'number') ? newMargin.left : throwError(msg);
+        if (newMargin.top !== undefined) {
+            if (isNaN(newMargin.top)) throwError("'Top'" + msg);
+            self.margin.top = parseInt(newMargin.top);
+            main.attr("transform", "translate(" + self.margin.left + "," + self.margin.top + ")");
+        }
+        if (newMargin.right !== undefined) {
+            if (isNaN(newMargin.right)) throwError("'Right'" + msg);
+            self.margin.right = parseInt(newMargin.right);
+        }
+        if (newMargin.bottom !== undefined) {
+            if (isNaN(newMargin.bottom)) throwError("'Bottom'" + msg);
+            self.margin.bottom = parseInt(newMargin.bottom);
+        }
+        if (newMargin.left !== undefined) {
+            if (isNaN(newMargin.left)) throwError("'Left'" + msg);
+            self.margin.left = parseInt(newMargin.left);
+            main.attr("transform", "translate(" + self.margin.left + "," + self.margin.top + ")");
+        }
 
         resize();
+        return api;
     }
 
     function onItemsChange() {
@@ -227,7 +288,7 @@ var ganttChart = function(conf) {
             })
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
             .attr("height", function (d) { return itemHeight; })
-            .on("click", (self.isShowTooltip) ? tooltip : null);
+            .on("click", (self.isEnableTooltip) ? showTooltip : null);
         rects.enter().append("rect")
             .attr("class", function (d) { return d.class + ' main'; })
             .attr("x", function (d) { return xScale(d.start); })
@@ -237,17 +298,19 @@ var ganttChart = function(conf) {
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
             .attr("height", function (d) { return  itemHeight; })
             .attr("opacity", .75)
-            .on("click", (self.isShowTooltip) ? tooltip : null);
+            .on("click", (self.isEnableTooltip) ? showTooltip : null);
         rects.exit().remove();
 
         main.select('g.main.axis.date').call(xAxis);
         main.select('g.main.axis.lane').call(yAxis);
+
+        hideTooltip();
     }
 
     function resize() {
         if (self.isAutoResize) {
-            self.width = $(self.renderTo).width();
-            self.height = $(self.renderTo).height();
+            self.width = parseInt(d3.select(self.renderTo).style('width'));
+            self.height = parseInt(d3.select(self.renderTo).style('height'));
         }
         var marginWidth = getMarginWidth(),
             marginHeight = getMarginHeight();
@@ -282,37 +345,30 @@ var ganttChart = function(conf) {
         self.isShowLaneLabel = isShowLaneLabel;
         if (isShowLaneLabel === false) {
             main.selectAll(".laneText").remove();
-            return;
+        }
+        else {
+            main.select('g.laneLabels').selectAll(".laneText")
+                .data(self.lanes)
+                .enter().append("text")
+                .text(function(d) {return d;})
+                .attr("x", -self.margin.right)
+                .attr("y", function(d, i) {return yScale(i + .5);})
+                .attr("dy", ".5ex")
+                .attr("text-anchor", "start")
+                .attr("class", "laneText");
         }
 
-        main.select('g.laneLabels').selectAll(".laneText")
-            .data(self.lanes)
-            .enter().append("text")
-            .text(function(d) {return d;})
-            .attr("x", -self.margin.right)
-            .attr("y", function(d, i) {return yScale(i + .5);})
-            .attr("dy", ".5ex")
-            .attr("text-anchor", "start")
-            .attr("class", "laneText");
+        return api;
     }
 
-    function showTooltip(isShowTooltip) {
-        if (!arguments.length) return self.isShowTooltip;
-        self.isShowTooltip = isShowTooltip;
-        redraw();
-    }
-
-    function tooltip(d) {
-        tooltipDiv.transition()
+    function showTooltip(d) {
+        tooltipDiv.style("display", "block")
+            .transition()
             .duration(200)
             .style("opacity", .9);
         tooltipDiv.html((typeof d.tooltip === 'function') ? d.tooltip() : d.tooltip)
             .style("left", (d3.event.pageX) + "px")
             .style("top", (d3.event.pageY) + "px");
-    }
-
-    function throwError(msg) {
-        throw TypeError(msg);
     }
 
     function showXGrid(isShowXGrid) {
@@ -321,6 +377,7 @@ var ganttChart = function(conf) {
         xAxis.tickSize(height, 0, 0);
         self.isShowXGrid = isShowXGrid;
         main.select('g.main.axis.date').call(xAxis);
+        return api;
     }
 
     function showYGrid(isShowYGrid) {
@@ -329,6 +386,7 @@ var ganttChart = function(conf) {
         yAxis.tickSize(width, 0, 0);
         self.isShowYGrid = isShowYGrid;
         main.select('g.main.axis.lane').call(yAxis);
+        return api;
     }
 
     function size(width, height) {
@@ -337,36 +395,19 @@ var ganttChart = function(conf) {
         self.height = parseInt(height) || self.height;
         autoresize(false);
         resize();
+        return api;
     }
 
     function sublanes(newSublanes) {
         if (!arguments.length) return self.sublanes;
         self.sublanes = newSublanes;
         redraw();
+        return api;
     }
 
-    return {
-        addItems: addItems,
-        autoresize: autoresize,
-        enableZoom: enableZoom,
-        chart: function() { return main },
-        items: items,
-        lanes: lanes,
-        margin: margin,
-        showLaneLabel: showLaneLabel,
-        showTooltip: showTooltip,
-        showXGrid: showXGrid,
-        showYGrid: showYGrid,
-        size: size,
-        sublanes: sublanes,
-        svg: function() { return chart },
-        redraw: redraw,
-        renderTo: function() { return self.renderTo },
-        resize: resize,
-        xAxis: function() { return xAxis },
-        xScale: function() { return xScale },
-        yScale: function() { return yScale },
-        yAxis: function() { return yAxis },
-        zoom: function() { return zoom },
+    function throwError(msg) {
+        throw TypeError(msg);
     }
+
+    return api;
 }

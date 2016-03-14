@@ -17,15 +17,17 @@ describe('test the Gantt Chart', function() {
     });
 
     it('should check defaults values', function() {
-        var margin = {top: 20, right: 15, bottom: 20, left: 20};
+        var margin = {top: 20, right: 15, bottom: 20, left: 20},
+            translate = 'translate(' + margin.left + ',' + margin.top + ')';
         expect(gantt.autoresize()).toBe(true);
+        expect(gantt.enableTooltip()).toBe(true);
         expect(gantt.enableZoom()).toBe(true);
         expect(gantt.chart()).not.toBe(undefined);
         expect(gantt.items().length).toBe(0);
         expect(gantt.lanes().length).toBe(0);
         expect(gantt.margin()).toEqual(margin);
+        expect(d3.select('svg g.main').attr('transform')).toEqual(translate);
         expect(gantt.showLaneLabel()).toBe(true);
-        expect(gantt.showTooltip()).toBe(true);
         expect(gantt.showXGrid()).toBe(true);
         expect(gantt.showYGrid()).toBe(true);
         expect(gantt.size()).toEqual(getSize());
@@ -79,6 +81,18 @@ describe('test the Gantt Chart', function() {
         expect(d3.select(window).on('resize')).not.toBe(undefined);
     });
 
+    it('should disable/enable tooltip', function() {
+        gantt.items(testData().getItems());
+        gantt.enableTooltip(false);
+
+        expect(gantt.enableTooltip()).toBe(false);
+        expect(getRects()[0].__onclick).toBe(undefined);
+
+        gantt.enableTooltip(true);
+        expect(gantt.enableTooltip()).toBe(true);
+        expect(getRects()[0].__onclick).not.toBe(undefined);
+    });
+
     it('should enable/disable zoom', function() {
         gantt.enableZoom(false);
         expect(gantt.enableZoom()).toBe(false);
@@ -90,7 +104,7 @@ describe('test the Gantt Chart', function() {
     });
 
     it('should get chart', function() {
-        expect(gantt.chart()).toEqual(d3.select('svg g.main'));
+        expect(gantt.chart()).toEqual(getChart());
     });
 
     it('should set items', function() {
@@ -126,13 +140,20 @@ describe('test the Gantt Chart', function() {
     });
 
     it('should set margin', function() {
-        var margin = {top: 0, right: 1, bottom: 2, left: 3};
+        var margin = {top: 0, right: 1, bottom: 2, left: 3},
+            translate = 'translate(' + margin.left + ',' + margin.top + ')';
         gantt.margin(margin);
         expect(gantt.margin()).toEqual(margin);
+        expect(getChart().attr('transform')).toEqual(translate);
+        expect(+getChart().attr('width')).toEqual(getSize()[0] - margin.left - margin.right);
+        expect(+getChart().attr('height')).toEqual(getSize()[1] - margin.top - margin.bottom);
+
+        gantt.margin({bottom: 20});
+        expect(gantt.margin().bottom).toEqual(20);
     });
 
     it('should throw error of incorrect margin', function() {
-        var msg = "Some of the margin value is incorrect. All numbers should be type of number";
+        var msg = "'Top' margin value is incorrect. All values should be numbers";
         function addIncorrectMargin() { gantt.margin({top: 'azaza'}); }
         expect(addIncorrectMargin).toThrow(new TypeError(msg));
     })
@@ -149,18 +170,6 @@ describe('test the Gantt Chart', function() {
         gantt.showLaneLabel(true);
         expect(gantt.showLaneLabel()).toBe(true);
         expect(getLaneLabels().length).toBe(2);
-    });
-
-    it('should hide/show tooltip', function() {
-        gantt.items(testData().getItems());
-        gantt.showTooltip(false);
-
-        expect(gantt.showTooltip()).toBe(false);
-        expect(getRects()[0].__onclick).toBe(undefined);
-
-        gantt.showTooltip(true);
-        expect(gantt.showTooltip()).toBe(true);
-        expect(getRects()[0].__onclick).not.toBe(undefined);
     });
 
     it('should hide/show the X grid', function() {
@@ -227,6 +236,50 @@ describe('test the Gantt Chart', function() {
 
     it('should get svg element', function() {
         expect(gantt.svg()).toEqual(d3.select('svg'));
+    });
+
+    it('should test method chaining', function() {
+        var data = testData(),
+            margin = {top: 0, right: 1, bottom: 2, left: 3},
+            conf = {
+                items: data.getItems(),
+                isAutoResize: false,
+                isEnableTooltip: false,
+                isEnableZoom: false,
+                isShowXGrid: false,
+                isShowYGrid: false,
+                isShowLaneLabel: false,
+                height: 240,
+                lanes: [1, 2, 3],
+                margin: margin,
+                renderTo: 'body',
+                sublanes: 2,
+                width: 320,
+            };
+        var o = gantt.addItems(data.getItems())
+            .autoresize(conf.isAutoResize)
+            .enableTooltip(conf.isEnableTooltip)
+            .enableZoom(conf.isEnableZoom)
+            .items(data.getItems(10))
+            .lanes(conf.lanes)
+            .margin(margin)
+            .showLaneLabel(conf.isShowLaneLabel)
+            .showXGrid(conf.isShowXGrid)
+            .showYGrid(conf.isShowYGrid)
+            .size(conf.width, conf.height)
+            .sublanes(conf.sublanes);
+
+        expect(gantt.autoresize()).toBe(conf.isAutoResize);
+        expect(gantt.enableTooltip()).toBe(conf.isEnableTooltip);
+        expect(gantt.enableZoom()).toBe(conf.isEnableZoom);
+        expect(gantt.items().length).toBe(30);
+        expect(gantt.lanes().length).toBe(conf.items.length);
+        expect(gantt.margin()).toEqual(conf.margin);
+        expect(gantt.showLaneLabel()).toBe(conf.isShowLaneLabel);
+        expect(gantt.showXGrid()).toBe(conf.isShowXGrid);
+        expect(gantt.showYGrid()).toBe(conf.isShowYGrid);
+        expect(gantt.size()).toEqual([conf.width, conf.height]);
+        expect(gantt.sublanes()).toBe(conf.sublanes);
     });
 
 });

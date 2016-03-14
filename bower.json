@@ -20,8 +20,5 @@
   ],
   "dependencies": {
     "d3": "~3.5.16"
-  },
-  "devDependencies": {
-    "jquery": "^2.2.1"
   }
 }

@@ -1,55 +1,39 @@
-.axis line, .axis path {
-	stroke: lightgrey;
-}
-
-.brush .extent {
-    stroke: gray;
-    fill: dodgerblue;
-    fill-opacity: .365;
-}
-
-.chart {
-	// cursor: move;
+.gantt-chart {
     shape-rendering: crispEdges;
-}
 
-// rect {
-// 	cursor: auto;
-// }
+    .axis line, .axis path {
+        stroke: lightgrey;
+    }
 
+    .danger {
+        stroke: red;
+        fill: lightcoral;
+    }
 
-.danger {
-	stroke: red;
-	fill: lightcoral;
-}
+    .default {
+        stroke: gray;
+        fill: lightgray;
+    }
 
-.default {
-	stroke: gray;
-	fill: lightgray;
-}
+    .info {
+        stroke: blue;
+        fill: lightblue;
+    }
 
-.info {
-	stroke: blue;
-	fill: lightblue;
-}
+    .success {
+        stroke: green;
+        fill: lightgreen;
+    }
 
-.success {
-	stroke: green;
-	fill: lightgreen;
-}
+    .warning {
+        stroke: orangered;
+        fill: orange;
+    }
 
-.warning {
-	stroke: orangered;
-	fill: orange;
-}
+    .main text {
+        font: 12px sans-serif;
+    }
 
-
-.main text {
-    font: 12px sans-serif;
-}
-
-.mini text {
-    font: 9px sans-serif;
 }
 
 .gantt-tooltip {
@@ -59,6 +43,10 @@
     border-radius: 3px;
     padding: 10px;
     z-index: 100;
+
+    .text-right {
+        text-align: right;
+    }
 }
 
 .gantt-tooltip-table {
@@ -68,38 +56,35 @@
     border-spacing: 0;
     border-collapse: collapse;
     border-color: gray;
-}
 
-.gantt-tooltip-table th {
-    text-align: left;
-}
+    th {
+        text-align: left;
+    }
 
-.gantt-tooltip-table > thead > th {
-    vertical-align: bottom;
-    border-bottom: 2px solid #ddd;
-}
+    > thead > th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #ddd;
+    }
 
-.gantt-tooltip-table tbody {
-    vertical-align: middle;
-}
+    tbody {
+        vertical-align: middle;
+    }
 
-.gantt-tooltip-table > tbody > tr {
-    vertical-align: bottom;
-    border-bottom: 1px solid #ddd;
-}
+    > tbody > tr {
+        vertical-align: bottom;
+        border-bottom: 1px solid #ddd;
+    }
 
-.gantt-tooltip-table > tbody > tr > td,
-.gantt-tooltip-table > tbody > tr > th,
-.gantt-tooltip-table > tfoot > tr > td,
-.gantt-tooltip-table > tfoot > tr > th,
-.gantt-tooltip-table > thead > tr > td,
-.gantt-tooltip-table > thead > tr > th {
-    padding: 8px;
-    line-height: 1.42857143;
-    vertical-align: top;
-    border-top: 1px solid #ddd;
-}
+    > tbody > tr > td,
+    > tbody > tr > th,
+    > tfoot > tr > td,
+    > tfoot > tr > th,
+    > thead > tr > td,
+    > thead > tr > th {
+        padding: 8px;
+        line-height: 1.42857143;
+        vertical-align: top;
+        border-top: 1px solid #ddd;
+    }
 
-.text-right {
-    text-align: right;
 }

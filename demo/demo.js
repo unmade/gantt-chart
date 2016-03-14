@@ -4,8 +4,8 @@ var gantt,
     data,
     zoom = true,
     autoresize = true,
+    enableTooltip = true,
     showLaneLabel = true,
-    showTooltip = true,
     showXGrid = true,
     showYGrid = true;
 
@@ -59,14 +59,19 @@ function setAutoresize() {
     getElemAndSetText('autoresize', (autoresize) ? 'Turn autoresize off' : 'Turn autoresize on');
 }
 
+function setSize() {
+    gantt.size(320, 240);
+    setAutoresize();
+}
+
 function toggleLaneLabels() {
     gantt.showLaneLabel(showLaneLabel = !showLaneLabel);
     getElemAndSetText('showLaneLabel', (showLaneLabel) ? 'Hide lane labels' : 'Show lane labels');
 }
 
 function toggleTooltip() {
-    gantt.showTooltip(showTooltip = !showTooltip);
-    getElemAndSetText('showTooltip', (showTooltip) ? 'Disable tooltip' : 'Enable tooltip');
+    gantt.enableTooltip(enableTooltip = !enableTooltip);
+    getElemAndSetText('enableTooltip', (enableTooltip) ? 'Disable tooltip' : 'Enable tooltip');
 }
 
 function toggleXGrid() {
