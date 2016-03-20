@@ -36,7 +36,7 @@ function testData() {
                 end: startDate + 444000,
                 tooltip: getTooltip,
                 class: 'danger',
-                sublane: 0
+                sublane: 1
             });
             startDate += 1800000;
         }
@@ -66,7 +66,7 @@ function testData() {
                 end: startDate + 389000,
                 tooltip: getTooltip,
                 class: 'success',
-                sublane: 1
+                sublane: 0
             });
             startDate += 1800000;
         }
@@ -81,19 +81,21 @@ function testData() {
     function getRandomItems(n) {
         var items = [],
             i,
-            N = n || 1;
+            N = n || 1,
+            rnd;
 
         for (i = 0; i < N; i++) {
+            rnd = getRandomInt(444000, 10444000);
             items.push({
                 id: id++,
                 lane: getRandomInt(0, 5),
                 start: startDate + 180000,
-                end: startDate + 444000,
+                end: startDate + rnd,
                 tooltip: getTooltip,
                 class: classes[getRandomInt(0, classes.length)],
-                sublane: 0
+                sublane: getRandomInt(0, 4)
             });
-            startDate += 1800000;
+            startDate += 1800000 + rnd;
         }
 
         return items;

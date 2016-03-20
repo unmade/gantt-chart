@@ -69,6 +69,10 @@ function toggleLaneLabels() {
     getElemAndSetText('showLaneLabel', (showLaneLabel) ? 'Hide lane labels' : 'Show lane labels');
 }
 
+function toggleSublanes() {
+    gantt.sublanes((gantt.sublanes() === 1) ? 2 : 1);
+}
+
 function toggleTooltip() {
     gantt.enableTooltip(enableTooltip = !enableTooltip);
     getElemAndSetText('enableTooltip', (enableTooltip) ? 'Disable tooltip' : 'Enable tooltip');
