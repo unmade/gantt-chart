@@ -174,8 +174,8 @@ var ganttChart = function(conf) {
 
     function dragmove() {
         d3.select(this)
-            .attr("x", d3.event.x)
-            .attr("y", d3.event.y)
+            .attr("x", parseFloat(d3.select(this).attr("x")) + d3.event.dx)
+            .attr("y", parseFloat(d3.select(this).attr("y")) + d3.event.dy)
     }
 
     function dragend(d) {
