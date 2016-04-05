@@ -4,6 +4,7 @@ var gantt,
     data,
     zoom = true,
     autoresize = true,
+    enableDrag = true,
     enableTooltip = true,
     showLaneLabel = true,
     showXGrid = true,
@@ -62,6 +63,11 @@ function setAutoresize() {
 function setSize() {
     gantt.size(320, 240);
     setAutoresize();
+}
+
+function toggleDrag() {
+    gantt.enableDrag(enableDrag = !enableDrag);
+    getElemAndSetText('enableDrag', (enableDrag) ? 'Disable drag\n\'drop' : 'Enable drag\n\'drop');
 }
 
 function toggleLaneLabels() {

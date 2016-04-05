@@ -57,6 +57,7 @@ var margin = {top: 0, right: 1, bottom: 2, left: 3},
     conf = {
         items: [],
         isAutoResize: false,
+        isEnableDrag: false,
         isEnableTooltip: false,
         isEnableZoom: false,
         isShowXGrid: false,
@@ -84,6 +85,7 @@ Initial parameters could be provided through *conf* object, which has following 
 | ----------------- | --------- | ------------ |
 | `items`           | `array`   | array of items to append to the chart. |
 | `isAutoResize`    | `boolean` | enables/disables autoresizing. |
+| `isEnableDrag`    | `boolean` | enables/disables drag'n'drop. |
 | `isEnableTooltip` | `boolean` | enables/disables showing of items tooltip. |
 | `isShowXGrid`     | `boolean` | shows/hides X-axis grid. |
 | `isShowYGrid`     | `boolean` | shows/hides Y-axis grid. |
@@ -138,6 +140,11 @@ Adds the items to the current items and redraw the chart. Returns `gantt` object
 If *boolean* is specified, enables or disables autoresizing accordingly and returns `gantt` object.
 By default, autoresizing is enabled.
 If *boolean* is not specified, returns whether or not the autoresizing currently enabled.
+
+#### enableDrag([boolean])
+If *boolean* is specified, enables or disables drag'n'drop items and returns `gantt` object.
+By default, drag'n'drop is enabled.
+If *boolean* is not specified, returns whether or not drag'n'drop currently enabled.
 
 #### enableTooltip([boolean])
 If *boolean* is specified, enables or disables showing of item's tooltip accordingly and returns `gantt` object.

@@ -6,14 +6,16 @@ var ganttChart = function(conf) {
         toStr = Object.prototype.toString,
         astr = "[object Array]",
         ostr = "[object Object]",
-        chart, main, itemRects, tooltipDiv, xAxis, xScale, yAxis, yScale, zoom;
+        chart, drag, main, itemRects, tooltipDiv, xAxis, xScale, yAxis, yScale, zoom;
 
     api = {
         addItems: addItems,
         autoresize: autoresize,
+        enableDrag: enableDrag,
         enableTooltip: enableTooltip,
         enableZoom: enableZoom,
         chart: function() { return main },
+        drag: function() { return drag },
         items: items,
         lanes: lanes,
         margin: margin,
@@ -39,6 +41,7 @@ var ganttChart = function(conf) {
     self.sublanes = 1;
 
     self.isAutoResize = true;
+    self.isEnableDrag = true;
     self.isEnableTooltip = true;
     self.isEnableZoom = true;
     self.isShowXGrid = true;
@@ -65,9 +68,10 @@ var ganttChart = function(conf) {
         if (self.width === null) self.width = parseInt(d3.select(self.renderTo).style('width')) || 640;
 
         build();
-        enableZoom(self.isEnableZoom);
         autoresize(self.isAutoResize);
+        enableDrag(self.isEnableDrag);
         enableTooltip(self.isEnableTooltip);
+        enableZoom(self.isEnableZoom);
         showLaneLabel(self.isEnableTooltip);
         showXGrid(self.isShowXGrid);
         showYGrid(self.isShowYGrid);
@@ -105,6 +109,11 @@ var ganttChart = function(conf) {
             .append("rect")
             .attr("width", marginWidth)
             .attr("height", marginHeight);
+
+        drag = d3.behavior.drag()
+            .on("dragstart", dragstart)
+            .on("drag", dragmove)
+            .on("dragend", dragend);
 
         main = chart.append("g")
             .attr("transform", "translate(" + self.margin.left + "," + self.margin.top + ")")
@@ -163,6 +172,33 @@ var ganttChart = function(conf) {
         });
     }
 
+    function dragmove() {
+        d3.select(this)
+            .attr("x", d3.event.x)
+            .attr("y", d3.event.y)
+    }
+
+    function dragend(d) {
+        var el = d3.select(this),
+            lane = Math.round(yScale.invert(el.attr("y"))),
+            start = el.attr("x");
+
+        if (lane >= self.lanes.length) {
+            lane = self.lanes.length - 1;
+        }
+        if (lane < 0) {
+            lane = 0;
+        }
+        el.attr("y", yScale(lane));
+        d.lane = lane;
+        d.start = Date.parse(xScale.invert(start));
+        d.end = Date.parse(xScale.invert(parseFloat(el.attr("width")) + parseFloat(start)));
+    }
+
+    function dragstart() {
+        d3.event.sourceEvent.stopPropagation();
+    }
+
     function copySameProp(copyTo, copyFrom) {
         var p;
 
@@ -176,6 +212,15 @@ var ganttChart = function(conf) {
                 }
             }
         }
+    }
+
+    function enableDrag(isEnableDrag) {
+        if (!arguments.length) return self.isEnableDrag;
+        drag.on("dragstart", (isEnableDrag) ? dragstart : null)
+            .on("drag", (isEnableDrag) ? dragmove : null)
+            .on("dragend", (isEnableDrag) ? dragend : null);
+        self.isEnableDrag = isEnableDrag;
+        return api;
     }
 
     function enableTooltip(isEnableTooltip) {
@@ -288,6 +333,7 @@ var ganttChart = function(conf) {
             })
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
             .attr("height", function (d) { return itemHeight; })
+            .call(drag)
             .on("click", (self.isEnableTooltip) ? showTooltip : null);
         rects.enter().append("rect")
             .attr("class", function (d) { return d.class + ' main'; })
@@ -298,6 +344,7 @@ var ganttChart = function(conf) {
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
             .attr("height", function (d) { return  itemHeight; })
             .attr("opacity", .75)
+            .call(drag)
             .on("click", (self.isEnableTooltip) ? showTooltip : null);
         rects.exit().remove();
 
@@ -362,6 +409,7 @@ var ganttChart = function(conf) {
     }
 
     function showTooltip(d) {
+        if (d3.event.defaultPrevented) return;
         tooltipDiv.style("display", "block")
             .transition()
             .duration(200)

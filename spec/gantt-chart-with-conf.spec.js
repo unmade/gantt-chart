@@ -10,6 +10,7 @@ describe('test the Gantt Chart', function() {
         conf = {
             items: testData().getItems(),
             isAutoResize: false,
+            isEnableDrag: false,
             isEnableTooltip: false,
             isEnableZoom: false,
             isShowXGrid: false,
@@ -32,6 +33,7 @@ describe('test the Gantt Chart', function() {
     it('should check defaults values', function() {
         var translate = 'translate(' + conf.margin.left + ',' + conf.margin.top + ')';
         expect(gantt.autoresize()).toBe(conf.isAutoResize);
+        expect(gantt.enableDrag()).toBe(conf.isEnableDrag);
         expect(gantt.enableTooltip()).toBe(conf.isEnableTooltip);
         expect(gantt.enableZoom()).toBe(conf.isEnableZoom);
         expect(gantt.chart()).not.toBe(undefined);
