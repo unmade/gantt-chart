@@ -11,6 +11,7 @@ describe('test the Gantt Chart', function() {
             items: testData().getItems(),
             isAutoResize: false,
             isEnableDrag: false,
+            isEnableItemResize: false,
             isEnableTooltip: false,
             isEnableZoom: false,
             isShowXGrid: false,
@@ -34,6 +35,7 @@ describe('test the Gantt Chart', function() {
         var translate = 'translate(' + conf.margin.left + ',' + conf.margin.top + ')';
         expect(gantt.autoresize()).toBe(conf.isAutoResize);
         expect(gantt.enableDrag()).toBe(conf.isEnableDrag);
+        expect(gantt.enableItemResize()).toBe(conf.isEnableItemResize);
         expect(gantt.enableTooltip()).toBe(conf.isEnableTooltip);
         expect(gantt.enableZoom()).toBe(conf.isEnableZoom);
         expect(gantt.chart()).not.toBe(undefined);

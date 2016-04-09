@@ -67,7 +67,6 @@ var margin = {top: 0, right: 1, bottom: 2, left: 3},
         lanes: [1, 2, 3],
         margin: margin,
         renderTo: 'body',
-        sublanes: 2,
         width: 320,
     },
     gantt = ganttChart(conf);
@@ -81,21 +80,21 @@ var margin = {top: 0, right: 1, bottom: 2, left: 3},
 Creates chart and returns `gantt` object.
 Initial parameters could be provided through *conf* object, which has following attributes:
 
-| Attributes        | Type      | Description  |
-| ----------------- | --------- | ------------ |
-| `items`           | `array`   | array of items to append to the chart. |
-| `isAutoResize`    | `boolean` | enables/disables autoresizing. |
-| `isEnableDrag`    | `boolean` | enables/disables drag'n'drop. |
-| `isEnableTooltip` | `boolean` | enables/disables showing of items tooltip. |
-| `isShowXGrid`     | `boolean` | shows/hides X-axis grid. |
-| `isShowYGrid`     | `boolean` | shows/hides Y-axis grid. |
-| `isShowLaneLabel` | `boolean` | show/hides lane's label. |
-| `height`          | `number`  | set the chart's height. |
-| `lanes`           | `array`   | array of lane's labels. |
-| `margin`          | `object`  | set the chart's margin. |
-| `renderTo`        | `string`  | element to render chart to. |
-| `sublanes`        | `number`  | number of sublanes in lanes. |
-| `width`           | `number`  | set the chart's width. |
+| Attributes           | Type      | Description  |
+| -------------------- | --------- | ------------ |
+| `items`              | `array`   | array of items to append to the chart. |
+| `isAutoResize`       | `boolean` | enables/disables autoresizing. |
+| `isEnableDrag`       | `boolean` | enables/disables drag'n'drop. |
+| `isEnableItemResize` | `boolean` | enables/disables item's resize. |
+| `isEnableTooltip`    | `boolean` | enables/disables showing of items tooltip. |
+| `isShowXGrid`        | `boolean` | shows/hides X-axis grid. |
+| `isShowYGrid`        | `boolean` | shows/hides Y-axis grid. |
+| `isShowLaneLabel`    | `boolean` | show/hides lane's label. |
+| `height`             | `number`  | set the chart's height. |
+| `lanes`              | `array`   | array of lane's labels. |
+| `margin`             | `object`  | set the chart's margin. |
+| `renderTo`           | `string`  | element to render chart to. |
+| `width`              | `number`  | set the chart's width. |
 
 `Item` object from `items` array has the following attributes:
 
@@ -107,7 +106,6 @@ Initial parameters could be provided through *conf* object, which has following 
 | `end`      | `number` | define where item should end. number of milliseconds since 1 January 1970 00:00:00 UTC. |
 | `tooltip`  | `string` or `function` | the tip that should be shown on item's click. |
 | `class`    | `string` | item's css class. |
-| `sublane`  | `number` | sublane where item should appear. Sublane's number starts with 0. |
 
 There is standard classes for items:
 - `success` - green color;
@@ -145,6 +143,11 @@ If *boolean* is not specified, returns whether or not the autoresizing currently
 If *boolean* is specified, enables or disables drag'n'drop items and returns `gantt` object.
 By default, drag'n'drop is enabled.
 If *boolean* is not specified, returns whether or not drag'n'drop currently enabled.
+
+#### enableItemResize([boolean])
+If *boolean* is specified, enables or disables item's resize and returns `gantt` object.
+By default, item's resize is enabled.
+If *boolean* is not specified, returns whether or not item's resize currently enabled.
 
 #### enableTooltip([boolean])
 If *boolean* is specified, enables or disables showing of item's tooltip accordingly and returns `gantt` object.
@@ -189,12 +192,6 @@ If *boolean* is not specified, returns whether or not Y-axis grid currently show
 #### size([width[, height]])
 If *width* or *height* is specified, sets the svg size to the specified value and returns `gantt` object.
 If *width, height* are not specified, returns the current svg size.
-
-#### sublanes([newSublanes])
-If *newSublanes* is specified, than each lane could contain several items up to the specified value
-and returns `gantt` object. Specified value should be greater than 0.
-By default, sublanes set to 1.
-If *newSublanes* is not specified, returns the current sublanes value.
 
 #### svg()
 Shortcut for `d3.select('svg.gantt-chart');`

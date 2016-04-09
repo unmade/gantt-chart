@@ -6,12 +6,14 @@ var ganttChart = function(conf) {
         toStr = Object.prototype.toString,
         astr = "[object Array]",
         ostr = "[object Object]",
-        chart, drag, main, itemRects, tooltipDiv, xAxis, xScale, yAxis, yScale, zoom;
+        chart, drag, main, itemRects, tooltipDiv, xAxis, xScale, yAxis, yScale, zoom,
+        resizeRectMargin = 50;
 
     api = {
         addItems: addItems,
         autoresize: autoresize,
         enableDrag: enableDrag,
+        enableItemResize: enableItemResize,
         enableTooltip: enableTooltip,
         enableZoom: enableZoom,
         chart: function() { return main },
@@ -42,6 +44,7 @@ var ganttChart = function(conf) {
 
     self.isAutoResize = true;
     self.isEnableDrag = true;
+    self.isEnableItemResize = true;
     self.isEnableTooltip = true;
     self.isEnableZoom = true;
     self.isShowXGrid = true;
@@ -172,13 +175,47 @@ var ganttChart = function(conf) {
         });
     }
 
+    function changeCursor(d) {
+        var x = parseFloat(d3.select(this).attr("x")),
+            width = parseFloat(d3.select(this).attr("width")),
+            x1 = x + width;
+
+        if ((x + resizeRectMargin >= d3.event.x) || (x1 <= d3.event.x)) {
+            d3.select(this).attr("class", d.class + ((self.isEnableItemResize) ? " cursor-resize" : " cursor-default"));
+        }
+        else {
+            d3.select(this).attr("class", d.class + ((self.isEnableDrag) ? " cursor-move" : " cursor-default"));
+        }
+    }
+
     function dragmove() {
-        d3.select(this)
-            .attr("x", parseFloat(d3.select(this).attr("x")) + d3.event.dx)
-            .attr("y", parseFloat(d3.select(this).attr("y")) + d3.event.dy)
+        var x = parseFloat(d3.select(this).attr("x")),
+            y = parseFloat(d3.select(this).attr("y")),
+            width = parseFloat(d3.select(this).attr("width")),
+            x1 = x + width;
+
+        if (self.isEnableItemResize) {
+            if (x + resizeRectMargin >= d3.event.x && x <= x1 - resizeRectMargin) {
+                d3.select(this)
+                    .attr("x", x + d3.event.dx)
+                    .attr("width", width - d3.event.dx);
+                return;
+            }
+            if (x1 - resizeRectMargin <= d3.event.x && x + 5 <= x1) {
+                d3.select(this)
+                    .attr("width", width + d3.event.dx);
+                return;
+            }
+        }
+        if (self.isEnableDrag) {
+            d3.select(this)
+                .attr("x", x + d3.event.dx)
+                .attr("y", y + d3.event.dy);
+        }
     }
 
     function dragend(d) {
+        if (!self.isEnableDrag && !self.isEnableItemResize) return;
         var el = d3.select(this),
             lane = Math.round(yScale.invert(el.attr("y"))),
             start = el.attr("x");
@@ -189,6 +226,7 @@ var ganttChart = function(conf) {
         if (lane < 0) {
             lane = 0;
         }
+
         el.attr("y", yScale(lane));
         d.lane = lane;
         d.start = Date.parse(xScale.invert(start));
@@ -196,6 +234,7 @@ var ganttChart = function(conf) {
     }
 
     function dragstart() {
+        if (!self.isEnableDrag && !self.isEnableItemResize) return;
         d3.event.sourceEvent.stopPropagation();
     }
 
@@ -216,10 +255,15 @@ var ganttChart = function(conf) {
 
     function enableDrag(isEnableDrag) {
         if (!arguments.length) return self.isEnableDrag;
-        drag.on("dragstart", (isEnableDrag) ? dragstart : null)
-            .on("drag", (isEnableDrag) ? dragmove : null)
-            .on("dragend", (isEnableDrag) ? dragend : null);
         self.isEnableDrag = isEnableDrag;
+        redraw();
+        return api;
+    }
+
+    function enableItemResize(isEnableItemResize) {
+        if (!arguments.length) return self.isEnableItemResize;
+        self.isEnableItemResize = isEnableItemResize;
+        redraw();
         return api;
     }
 
@@ -319,6 +363,7 @@ var ganttChart = function(conf) {
         yScale.domain([0, laneLength]);
         zoom.x(xScale);
         redraw();
+        redraw();
     }
 
     function redraw() {
@@ -326,26 +371,20 @@ var ganttChart = function(conf) {
             rects;
 
         rects = itemRects.selectAll("rect")
-            .data(self.items, function (d) { return d.id; })
+            .data(self.items)
             .attr("x", function (d) { return xScale(d.start); })
             .attr("y", function (d) {
                 return (self.sublanes < 2) ? yScale(d.lane) : yScale(d.lane) + d.sublane*itemHeight;
             })
             .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
-            .attr("height", function (d) { return itemHeight; })
-            .call(drag)
-            .on("click", (self.isEnableTooltip) ? showTooltip : null);
-        rects.enter().append("rect")
+            .attr("height", itemHeight)
             .attr("class", function (d) { return d.class + ' main'; })
-            .attr("x", function (d) { return xScale(d.start); })
-            .attr("y", function (d) {
-                return (self.sublanes < 2) ? yScale(d.lane) : yScale(d.lane) + d.sublane*itemHeight;
-            })
-            .attr("width", function (d) { return xScale(d.end) - xScale(d.start); })
-            .attr("height", function (d) { return  itemHeight; })
             .attr("opacity", .75)
             .call(drag)
-            .on("click", (self.isEnableTooltip) ? showTooltip : null);
+            .on("click", (self.isEnableTooltip) ? showTooltip : null)
+            .on("mousemove", changeCursor)
+
+        rects.enter().append("rect");
         rects.exit().remove();
 
         main.select('g.main.axis.date').call(xAxis);

@@ -21,6 +21,7 @@ describe('test the Gantt Chart', function() {
             translate = 'translate(' + margin.left + ',' + margin.top + ')';
         expect(gantt.autoresize()).toBe(true);
         expect(gantt.enableDrag()).toBe(true);
+        expect(gantt.enableItemResize()).toBe(true);
         expect(gantt.enableTooltip()).toBe(true);
         expect(gantt.enableZoom()).toBe(true);
         expect(gantt.chart()).not.toBe(undefined);
@@ -85,15 +86,17 @@ describe('test the Gantt Chart', function() {
     it('should enable/disable drag and drop', function() {
         gantt.enableDrag(false);
         expect(gantt.enableDrag()).toBe(false);
-        expect(gantt.drag().on("dragstart")).toBe(undefined);
-        expect(gantt.drag().on("drag")).toBe(undefined);
-        expect(gantt.drag().on("dragend")).toBe(undefined);
 
         gantt.enableDrag(true);
         expect(gantt.enableZoom()).toBe(true);
-        expect(gantt.drag().on("dragstart")).not.toBe(undefined);
-        expect(gantt.drag().on("drag")).not.toBe(undefined);
-        expect(gantt.drag().on("dragend")).not.toBe(undefined);
+    });
+
+    it('should enable/disable items resize', function() {
+        gantt.enableItemResize(false);
+        expect(gantt.enableItemResize()).toBe(false);
+
+        gantt.enableItemResize(true);
+        expect(gantt.enableItemResize()).toBe(true);
     });
 
     it('should disable/enable tooltip', function() {
@@ -260,6 +263,7 @@ describe('test the Gantt Chart', function() {
                 items: data.getItems(),
                 isAutoResize: false,
                 isEnableDrag: false,
+                isEnableItemResize: false,
                 isEnableTooltip: false,
                 isEnableZoom: false,
                 isShowXGrid: false,
@@ -275,6 +279,7 @@ describe('test the Gantt Chart', function() {
         var o = gantt.addItems(data.getItems())
             .autoresize(conf.isAutoResize)
             .enableDrag(conf.isEnableDrag)
+            .enableItemResize(conf.isEnableItemResize)
             .enableTooltip(conf.isEnableTooltip)
             .enableZoom(conf.isEnableZoom)
             .items(data.getItems(10))
@@ -287,7 +292,8 @@ describe('test the Gantt Chart', function() {
             .sublanes(conf.sublanes);
 
         expect(gantt.autoresize()).toBe(conf.isAutoResize);
-        expect(gantt.enableDrag()).toBe(conf.isEnableTooltip);
+        expect(gantt.enableDrag()).toBe(conf.isEnableDrag)
+        expect(gantt.enableItemResize()).toBe(conf.isEnableItemResize);
         expect(gantt.enableTooltip()).toBe(conf.isEnableTooltip);
         expect(gantt.enableZoom()).toBe(conf.isEnableZoom);
         expect(gantt.items().length).toBe(30);

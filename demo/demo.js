@@ -5,6 +5,7 @@ var gantt,
     zoom = true,
     autoresize = true,
     enableDrag = true,
+    enableItemResize = true,
     enableTooltip = true,
     showLaneLabel = true,
     showXGrid = true,
@@ -68,6 +69,11 @@ function setSize() {
 function toggleDrag() {
     gantt.enableDrag(enableDrag = !enableDrag);
     getElemAndSetText('enableDrag', (enableDrag) ? 'Disable drag\n\'drop' : 'Enable drag\n\'drop');
+}
+
+function toggleItemResize() {
+    gantt.enableItemResize(enableItemResize = !enableItemResize);
+    getElemAndSetText('enableItemResize', (enableItemResize) ? 'Disable item\'s resize' : 'Enable item\'s resize');
 }
 
 function toggleLaneLabels() {
